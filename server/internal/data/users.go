@@ -16,13 +16,18 @@ var (
 )
 
 type User struct {
-	ID        int64     `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	Password  password  `json:"-"`
-	Activated bool      `json:"activated"`
-	Version   int       `json:"versoon"`
+	ID              int64     `json:"id"`
+	Username        string    `json:"username"`
+	Password        password  `json:"-"`
+	Fullname        string    `json:"fullname"`
+	Email           string    `json:"email"`
+	Phone           string    `json:"phone"`
+	Address         string    `json:"address"`
+	DistrictId      int64     `json:"district_id"`
+	ProfileImageUrl string    `json:"profile_image_url"`
+	UserTypeId      int64     `json:"user_type_id"`
+	Activated       bool      `json:"activated"`
+	CreatedAt       time.Time `json:"created_at"`
 }
 
 // create a customer password type
@@ -72,8 +77,21 @@ func ValidatePasswordPlaintext(v *validator.Validator, password string) {
 }
 
 func ValidateUser(v *validator.Validator, user *User) {
-	v.Check(user.Name != "", "name", "must be provided")
-	v.Check(len(user.Name) <= 500, "name", "must not be more than 72 Characters")
+	v.Check(user.Username != "", "username", "must be provided")
+	v.Check(len(user.Username) <= 200, "username", "must not be more than 200 bye Characters")
+
+	v.Check(user.Fullname != "", "fullname", "must be provided")
+	v.Check(len(user.Fullname) <= 500, "fullname", "must not be more than 500 bye Characters")
+
+	v.Check(user.Phone != "", "phone", "must be provided")
+	v.Check(validator.Matches(user.Phone, validator.PhoneRX), "phone", "must be a valid phone number")
+
+	v.Check(user.Address != "", "address", "must be provided")
+	v.Check(len(user.Address) <= 500, "address", "must not be more than 500 bytes long")
+
+	v.Check(user.DistrictId != 0, "district_id", "must be provided")
+	v.Check(user.UserTypeId != 0, "user_type_id", "must be provided")
+
 	//validate Email
 
 	ValidateEmail(v, user.Email)
@@ -102,22 +120,28 @@ func (m UserModel) Insert(user *User) error {
 	//create our query
 	query :=
 		`	
-		INSERT INTO users(name, email, password_hash, activated)
-		VALUES($1,$2,$3,$4)
-		RETURNING id, created_at, version
+		INSERT INTO users(usernmame, password_hash, email, phone, profileimageurl,address, districtid, usertypeid, activated)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+		RETURNING id, created_at
 	`
 
 	args := []interface{}{
-		user.Name,
-		user.Email,
+		user.Username,
 		user.Password.hash,
+		user.Fullname,
+		user.Email,
+		user.Phone,
+		user.ProfileImageUrl,
+		user.Address,
+		user.DistrictId,
+		user.UserTypeId,
 		user.Activated,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt, &user.Version)
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt)
 
 	if err != nil {
 		switch {

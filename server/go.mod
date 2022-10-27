@@ -8,4 +8,4 @@ require (
 	golang.org/x/time v0.1.0
 )
 
-require golang.org/x/crypto v0.1.0 // indirect
+require golang.org/x/crypto v0.1.0
