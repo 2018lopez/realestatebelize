@@ -4,6 +4,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"realestatebelize.imerlopez.net/internal/data"
@@ -19,9 +20,9 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		Fullname        string `json:"fullname"`
 		Email           string `json:"email"`
 		Phone           string `json:"phone"`
+		ProfileImageUrl string `json:"profile_image_url"`
 		Address         string `json:"address"`
 		DistrictId      int64  `json:"district_id"`
-		ProfileImageUrl string `json:"profile_image_url"`
 		UserTypeId      int64  `json:"user_type_id"`
 	}
 
@@ -38,12 +39,14 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		Fullname:        input.Fullname,
 		Email:           input.Email,
 		Phone:           input.Phone,
+		ProfileImageUrl: input.ProfileImageUrl,
 		Address:         input.Address,
 		DistrictId:      input.DistrictId,
-		ProfileImageUrl: input.ProfileImageUrl,
 		UserTypeId:      input.UserTypeId,
 		Activated:       false,
 	}
+
+	fmt.Println(":::", user)
 
 	//Generate a password Hash
 	err = user.Password.Set(input.Password)
@@ -61,10 +64,11 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	fmt.Println("<<", user)
+
 	//insert data to database
 
 	err = app.models.Users.Insert(user)
-
 	if err != nil {
 
 		switch {
