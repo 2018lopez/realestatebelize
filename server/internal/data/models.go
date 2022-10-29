@@ -14,13 +14,15 @@ var (
 
 // A wrapper for our data models
 type Models struct {
-	Users UserModel
+	Users   UserModel
+	Listing ListingModel
 }
 
 // NewModels allow us to create a new models
 func NewModels(db *sql.DB) Models {
 
 	return Models{
-		Users: UserModel{DB: db},
+		Users:   UserModel{DB: db},
+		Listing: ListingModel{DB: db},
 	}
 }
