@@ -7,11 +7,13 @@ import (
 	"database/sql"
 	"flag"
 	"os"
+	"sync"
 	"time"
 
 	_ "github.com/lib/pq"
 	"realestatebelize.imerlopez.net/internal/data"
 	"realestatebelize.imerlopez.net/internal/jsonlog"
+	"realestatebelize.imerlopez.net/internal/mailer"
 )
 
 // App Verison
@@ -32,6 +34,13 @@ type config struct {
 		burst   int
 		enabled bool
 	}
+	smtp struct {
+		host     string
+		port     int
+		username string //from mailTrap
+		password string
+		sender   string
+	}
 }
 
 //Dependency Injection
@@ -40,6 +49,8 @@ type application struct {
 	config config
 	logger *jsonlog.Logger
 	models data.Models
+	mailer mailer.Mailer
+	wg     sync.WaitGroup
 }
 
 func main() {
@@ -56,6 +67,13 @@ func main() {
 	flag.Float64Var(&cfg.limiter.rps, "limiter-rps", 2, "Rate limiter maximum requests per second")
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enabled rate limiter")
+
+	//These are flags for the mailer
+	flag.StringVar(&cfg.smtp.host, "smtp-host", "smtp.mailtrap.io", "SMTP host")
+	flag.IntVar(&cfg.smtp.port, "smpt-port", 2525, "SMPT port")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", "d8d11347ef4501", "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", "8c073ce7c82892", "SMTP password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Belize RealEstate <no-reply@belizerealestate.imerlopez.net>", "SMTP Sender")
 
 	flag.Parse()
 
@@ -78,6 +96,7 @@ func main() {
 		config: cfg,
 		logger: logger,
 		models: data.NewModels(db),
+		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
 
 	// call the app.serve to start the server

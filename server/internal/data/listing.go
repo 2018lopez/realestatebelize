@@ -23,6 +23,7 @@ type Listing struct {
 	CreatedAt        time.Time `json:"-"`
 }
 
+// listing struct for get by id
 type Listings struct {
 	ID               int64     `json:"id"`
 	PropertyTitle    string    `json:"property_title"`
