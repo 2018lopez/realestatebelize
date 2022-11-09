@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -67,6 +68,7 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 
 func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
 	//user http.maxByteReader() to limit the size of the request body to 1 mb 2 ^20
+
 	maxBytes := 1_048_576
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 	dec := json.NewDecoder(r.Body)
@@ -87,6 +89,7 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 		switch {
 		//check for syntax error
 		case errors.As(err, &syntaxError):
+
 			return fmt.Errorf("body contains badly-formed json(at character %d)", syntaxError.Offset)
 		case errors.Is(err, io.ErrUnexpectedEOF):
 			return errors.New("Body contains badly-formed JSON")
@@ -98,6 +101,7 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 			return fmt.Errorf("body contains incorrect JSON type - at character %d", unmarshalTypeError.Offset)
 		//Empty Body
 		case errors.Is(err, io.EOF):
+			fmt.Println(err, io.EOF)
 			return errors.New("body must not be empty")
 		//unmappable field
 		case strings.HasPrefix(err.Error(), "json: unknown field"):
@@ -201,4 +205,26 @@ func (app *application) background(fn func()) {
 		fn()
 	}()
 
+}
+
+func (app *application) uploadFiles(r *http.Request) (string, error) {
+
+	//this function returns the filename(to save in database) of the saved file or an error if it occurs
+	r.ParseMultipartForm(0)                               //ParseMultipartForm parses a request body as multipart/form-data
+	file, handler, err := r.FormFile("profile_image_url") //retrieve the file from form data
+	//replace file with the key your sent your image with
+	if err != nil {
+		return "", err
+	}
+	defer file.Close() //close the file when we finish
+	//this is path which  we want to store the file
+	filePath := "uploads/" + handler.Filename
+	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	io.Copy(f, file)
+	//here we save our file to our path
+	return filePath, nil
 }

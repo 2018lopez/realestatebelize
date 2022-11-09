@@ -3,6 +3,7 @@ package data
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -155,4 +156,90 @@ func (m UserModel) Insert(user *User) error {
 		}
 	}
 	return nil
+}
+
+// The client can update their information
+func (m UserModel) Update(user *User) error {
+	query := `
+		UPDATE users
+		SET username = $1, password_hash = $2, fullname = $3, email = $4, phone = $5,
+		profileimageurl = $6, address = $7, districtid = $8, usertypeid = $9 , activated = $10
+		WHERE id = $11
+		RETURNING id
+	`
+	args := []interface{}{
+		user.Username,
+		user.Password.hash,
+		user.Fullname,
+		user.Email,
+		user.Phone,
+		user.ProfileImageUrl,
+		user.Address,
+		user.DistrictId,
+		user.UserTypeId,
+		user.Activated,
+		user.ID,
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID)
+	if err != nil {
+		switch {
+		case err.Error() == `pq :duplicate key values violates unique constraint "users_email_key"`:
+			return ErrDuplicateEmail
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m UserModel) GetForToken(tokenScope, tokenPlainText string) (*User, error) {
+
+	tokenHash := sha256.Sum256([]byte(tokenPlainText))
+	//setup query
+	query := `
+
+		SELECT users.id, users.username, users.password_hash, users.fullname, users.email, users.phone, users.profileimageurl, users.address, users.districtid, users.usertypeid, users.activated, users.created_at
+		FROM users
+		INNER JOIN tokens
+		on users.id = tokens.user_id
+		WHERE tokens.hash = $1 AND tokens.scope = $2
+		AND tokens.expiry > $3
+	`
+	args := []interface{}{tokenHash[:], tokenScope, time.Now()}
+
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Password.hash,
+		&user.Fullname,
+		&user.Email,
+		&user.Phone,
+		&user.ProfileImageUrl,
+		&user.Address,
+		&user.DistrictId,
+		&user.UserTypeId,
+		&user.Activated,
+		&user.CreatedAt,
+	)
+
+	if err != nil {
+
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
+
 }

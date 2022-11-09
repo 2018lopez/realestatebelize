@@ -14,6 +14,7 @@ var (
 
 // A wrapper for our data models
 type Models struct {
+	Tokens  TokenModel
 	Users   UserModel
 	Listing ListingModel
 }
@@ -22,6 +23,7 @@ type Models struct {
 func NewModels(db *sql.DB) Models {
 
 	return Models{
+		Tokens:  TokenModel{DB: db},
 		Users:   UserModel{DB: db},
 		Listing: ListingModel{DB: db},
 	}
