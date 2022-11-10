@@ -4,7 +4,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -30,7 +29,6 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	err := app.readJSON(w, r, &input)
 
 	if err != nil {
-		fmt.Println("Error ReadJson")
 		app.badRequestResponse(w, r, err)
 		return
 	}

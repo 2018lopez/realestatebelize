@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -123,7 +122,7 @@ func (m UserModel) Insert(user *User) error {
 	query :=
 		`	
 		INSERT INTO users(username, password_hash, fullname, email,phone, address, districtid,usertypeid,activated)
-		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
 		RETURNING id, created_at
 	`
 
@@ -138,8 +137,6 @@ func (m UserModel) Insert(user *User) error {
 		user.UserTypeId,
 		user.Activated,
 	}
-
-	fmt.Println("Back", args)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
