@@ -67,9 +67,10 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 }
 
 func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
+
 	//user http.maxByteReader() to limit the size of the request body to 1 mb 2 ^20
 
-	maxBytes := 1_048_576
+	maxBytes := 2_048_576
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
@@ -101,7 +102,7 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 			return fmt.Errorf("body contains incorrect JSON type - at character %d", unmarshalTypeError.Offset)
 		//Empty Body
 		case errors.Is(err, io.EOF):
-			fmt.Println(err, io.EOF)
+
 			return errors.New("body must not be empty")
 		//unmappable field
 		case strings.HasPrefix(err.Error(), "json: unknown field"):
@@ -208,9 +209,8 @@ func (app *application) background(fn func()) {
 }
 
 func (app *application) uploadFiles(r *http.Request) (string, error) {
-
 	//this function returns the filename(to save in database) of the saved file or an error if it occurs
-	r.ParseMultipartForm(0)                               //ParseMultipartForm parses a request body as multipart/form-data
+	r.ParseMultipartForm(500)
 	file, handler, err := r.FormFile("profile_image_url") //retrieve the file from form data
 	//replace file with the key your sent your image with
 	if err != nil {
@@ -227,4 +227,32 @@ func (app *application) uploadFiles(r *http.Request) (string, error) {
 	io.Copy(f, file)
 	//here we save our file to our path
 	return filePath, nil
+
+	// 	// left shift 32 << 20 which results in 32*2^20 = 33554432
+	// 	// x << y, results in x*2^y
+	// 	err := r.ParseMultipartForm(32 << 20)
+	// 	if err != nil {
+	// 		return ""
+	// 	}
+	// 	// n := r.Form.Get("name")
+	// 	// Retrieve the file from form data
+	// 	f, h, err := r.FormFile("profile_image_url")
+	// 	if err != nil {
+	// 		return ""
+	// 	}
+	// 	defer f.Close()
+	// 	filePath := "uploads/" + h.Filename
+
+	// 	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0666)
+	// 	if err != nil {
+	// 		return ""
+	// 	}
+	// 	defer file.Close()
+	// 	// Copy the file to the destination path
+	// 	_, err = io.Copy(file, f)
+	// 	if err != nil {
+	// 		return ""
+	// 	}
+
+	// return filePath
 }

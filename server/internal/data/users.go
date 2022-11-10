@@ -18,18 +18,18 @@ var (
 )
 
 type User struct {
-	ID              int64     `json:"id"`
-	Username        string    `json:"username"`
-	Password        password  `json:"-"`
-	Fullname        string    `json:"fullname"`
-	Email           string    `json:"email"`
-	Phone           string    `json:"phone"`
-	Address         string    `json:"address"`
-	DistrictId      int64     `json:"district_id"`
-	ProfileImageUrl string    `json:"profile_image_url"`
-	UserTypeId      int64     `json:"user_type_id"`
-	Activated       bool      `json:"activated"`
-	CreatedAt       time.Time `json:"created_at"`
+	ID         int64    `json:"id"`
+	Username   string   `json:"username"`
+	Password   password `json:"-"`
+	Fullname   string   `json:"fullname"`
+	Email      string   `json:"email"`
+	Phone      string   `json:"phone"`
+	Address    string   `json:"address"`
+	DistrictId int64    `json:"district_id"`
+
+	UserTypeId int64     `json:"user_type_id"`
+	Activated  bool      `json:"activated"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // create a customer password type
@@ -122,7 +122,7 @@ func (m UserModel) Insert(user *User) error {
 	//create our query
 	query :=
 		`	
-		INSERT INTO users(username, password_hash, fullname, email,phone, profileimageurl,address, districtid,usertypeid,activated)
+		INSERT INTO users(username, password_hash, fullname, email,phone, address, districtid,usertypeid,activated)
 		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
 		RETURNING id, created_at
 	`
@@ -133,7 +133,6 @@ func (m UserModel) Insert(user *User) error {
 		user.Fullname,
 		user.Email,
 		user.Phone,
-		user.ProfileImageUrl,
 		user.Address,
 		user.DistrictId,
 		user.UserTypeId,
@@ -163,8 +162,8 @@ func (m UserModel) Update(user *User) error {
 	query := `
 		UPDATE users
 		SET username = $1, password_hash = $2, fullname = $3, email = $4, phone = $5,
-		profileimageurl = $6, address = $7, districtid = $8, usertypeid = $9 , activated = $10
-		WHERE id = $11
+		 address = $6, districtid = $7, usertypeid = $8 , activated = $9
+		WHERE id = $10
 		RETURNING id
 	`
 	args := []interface{}{
@@ -173,7 +172,6 @@ func (m UserModel) Update(user *User) error {
 		user.Fullname,
 		user.Email,
 		user.Phone,
-		user.ProfileImageUrl,
 		user.Address,
 		user.DistrictId,
 		user.UserTypeId,
@@ -201,7 +199,7 @@ func (m UserModel) GetForToken(tokenScope, tokenPlainText string) (*User, error)
 	//setup query
 	query := `
 
-		SELECT users.id, users.username, users.password_hash, users.fullname, users.email, users.phone, users.profileimageurl, users.address, users.districtid, users.usertypeid, users.activated, users.created_at
+		SELECT users.id, users.username, users.password_hash, users.fullname, users.email, users.phone,  users.address, users.districtid, users.usertypeid, users.activated, users.created_at
 		FROM users
 		INNER JOIN tokens
 		on users.id = tokens.user_id
@@ -222,7 +220,7 @@ func (m UserModel) GetForToken(tokenScope, tokenPlainText string) (*User, error)
 		&user.Fullname,
 		&user.Email,
 		&user.Phone,
-		&user.ProfileImageUrl,
+
 		&user.Address,
 		&user.DistrictId,
 		&user.UserTypeId,
@@ -242,4 +240,48 @@ func (m UserModel) GetForToken(tokenScope, tokenPlainText string) (*User, error)
 
 	return &user, nil
 
+}
+
+// get user based on their username
+func (m UserModel) GetByUsername(username string) (*User, error) {
+
+	query := `
+	
+		SELECT id, username, password_hash, fullname, email,phone, address, districtid,usertypeid,activated, created_at
+		FROM users
+		WHERE username = $1
+	`
+
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, username).Scan(
+
+		&user.ID,
+		&user.Username,
+		&user.Password.hash,
+		&user.Fullname,
+		&user.Email,
+		&user.Phone,
+
+		&user.Address,
+		&user.DistrictId,
+		&user.UserTypeId,
+		&user.Activated,
+		&user.CreatedAt,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+
+	}
+
+	return &user, nil
 }

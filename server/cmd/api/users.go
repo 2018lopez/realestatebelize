@@ -16,45 +16,35 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	//Hold data from the request body
 
 	var input struct {
-		Username        string `json:"username"`
-		Password        string `json:"password"`
-		Fullname        string `json:"fullname"`
-		Email           string `json:"email"`
-		Phone           string `json:"phone"`
-		ProfileImageUrl string `json:"profile_image_url"`
-		Address         string `json:"address"`
-		DistrictId      int64  `json:"district_id"`
-		UserTypeId      int64  `json:"user_type_id"`
+		Username   string `json:"username"`
+		Password   string `json:"password"`
+		Fullname   string `json:"fullname"`
+		Email      string `json:"email"`
+		Phone      string `json:"phone"`
+		Address    string `json:"address"`
+		DistrictId int64  `json:"district_id"`
+		UserTypeId int64  `json:"user_type_id"`
 	}
-	// imagePath, err := app.uploadFiles(r)
 
-	// if err != nil {
-	// 	app.serverErrorResponse(w, r, err)
-	// 	fmt.Println("First")
-	// 	return
-	// }
-	// fmt.Println(imagePath)
 	//Parse the request body into the anonymous struct
 	err := app.readJSON(w, r, &input)
 
 	if err != nil {
+		fmt.Println("Error ReadJson")
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
 	user := &data.User{
-		Username:        input.Username,
-		Fullname:        input.Fullname,
-		Email:           input.Email,
-		Phone:           input.Phone,
-		ProfileImageUrl: input.ProfileImageUrl,
-		Address:         input.Address,
-		DistrictId:      input.DistrictId,
-		UserTypeId:      input.UserTypeId,
-		Activated:       false,
+		Username:   input.Username,
+		Fullname:   input.Fullname,
+		Email:      input.Email,
+		Phone:      input.Phone,
+		Address:    input.Address,
+		DistrictId: input.DistrictId,
+		UserTypeId: input.UserTypeId,
+		Activated:  false,
 	}
-
-	fmt.Println(":::", user)
 
 	//Generate a password Hash
 	err = user.Password.Set(input.Password)
@@ -71,8 +61,6 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
-
-	fmt.Println("<<", user)
 
 	//insert data to database
 
@@ -189,4 +177,5 @@ func (app *application) activatedUserHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
+
 }

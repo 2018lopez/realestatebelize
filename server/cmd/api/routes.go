@@ -18,7 +18,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", app.activatedUserHandler)
-
+	router.HandlerFunc(http.MethodPost, "/v1/users/image", app.uploadUserImageHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.activatedUserHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/listings", app.createListingHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/listings/:id", app.showListingHandler)
 
