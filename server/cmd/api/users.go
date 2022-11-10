@@ -177,3 +177,39 @@ func (app *application) activatedUserHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 }
+
+// Show user for get by id
+
+func (app *application) getUserByIdHandler(w http.ResponseWriter, r *http.Request) {
+
+	//get id from param
+	id, err := app.readIdParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	//fetch the specific schools
+
+	users, err := app.models.Users.Get(id)
+	//handle errors
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+
+		return
+
+	}
+
+	//write data return by get
+	err = app.writeJSON(w, http.StatusOK, envelope{"user": users}, nil)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
+}

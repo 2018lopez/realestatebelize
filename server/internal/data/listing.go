@@ -93,7 +93,7 @@ func (m ListingModel) Insert(listing *Listing) error {
 
 }
 
-// Get () allow us to retrieve a specific school
+// Get () allow us to retrieve a specific listing
 func (m ListingModel) Get(id int64) (*Listings, error) {
 
 	//Ensure that there is a valid id

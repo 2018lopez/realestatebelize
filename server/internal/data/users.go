@@ -31,6 +31,23 @@ type User struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
+//UserListing struct use for get by id
+
+type UserListing struct {
+	ID           int64     `json:"id"`
+	Username     string    `json:"username"`
+	Password     password  `json:"-"`
+	Fullname     string    `json:"fullname"`
+	Email        string    `json:"email"`
+	Phone        string    `json:"phone"`
+	Address      string    `json:"address"`
+	DistrictId   string    `json:"district_id"`
+	UserTypeId   string    `json:"user_type_id"`
+	Activated    bool      `json:"activated"`
+	ProfileImage string    `json:"profile_image"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
 // create a customer password type
 type password struct {
 	plaintext *string
@@ -281,4 +298,67 @@ func (m UserModel) GetByUsername(username string) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+// Get () allow us to retrieve a specific listing
+func (m UserModel) Get(id int64) (*UserListing, error) {
+
+	//Ensure that there is a valid id
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	//create query
+	query := `
+
+	SELECT u.id, u.username, u.password_hash,u.fullname, u.email, u.phone, u.address, d.name as district, ut.name as usertype,
+		u.activated, img.image_url, u.created_at
+		FROM users u inner join userprofileimage img
+		on u.id = img.user_id
+		inner join district d 
+		on d.id = u.districtid
+		inner join usertype ut
+		on ut.id = u.usertypeid
+		where u.id =  $1
+	
+	`
+	//Declare school variable to hold the return data
+
+	var userlisting UserListing
+
+	//create a context
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	//cleanup to prevent memory leak
+	defer cancel()
+
+	//Execute the query using QueryRow()
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+
+		&userlisting.ID,
+		&userlisting.Username,
+		&userlisting.Password.hash,
+		&userlisting.Fullname,
+		&userlisting.Email,
+		&userlisting.Phone,
+		&userlisting.Address,
+		&userlisting.DistrictId,
+		&userlisting.UserTypeId,
+		&userlisting.Activated,
+		&userlisting.ProfileImage,
+		&userlisting.CreatedAt,
+	)
+
+	if err != nil {
+		//check type of err
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	//Success
+	return &userlisting, nil
 }
