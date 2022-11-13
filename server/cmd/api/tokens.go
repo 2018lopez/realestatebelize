@@ -4,6 +4,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -15,13 +16,13 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 
 	//Parse the username, usertype password from the request body
 	var input struct {
-		Username   string `json:"username"`
-		Password   string `json:"password"`
-		UserTypeId int64  `json:"user_type_id"`
+		Username string `json:"username"`
+		Password string `json:"password"`
 	}
 
 	err := app.readJSON(w, r, &input)
 	if err != nil {
+		fmt.Println("dds")
 		app.badRequestResponse(w, r, err)
 		return
 	}

@@ -4,11 +4,22 @@ Tasks
 2. Design UI - Figma
 3. Implement Database
 4. Setup trello Agile
-   BODY='{"username":"lewisd","password":"belize12\$","fullname":"Dalwin Lewis", "email":"lewisd@example.com", "phone":"501-607-2461", "profile_image_url":"uploads/house.jpeg","address":"Military St San Ignacio","district_id":1, "user_type_id":1}'
+   BODY='{"username":"trumpjerry","password":"belize1289","fullname":"Jerry Trump", "email":"trumpjerry@example.com", "phone":"501-607-2461", "address":"Military St San Ignacio","district_id":1, "user_type_id":1}'
 
 authentication
 
-BODY='{"username":"lewisd","password":"belize12\$","user_type_id":1}'
+BODY='{"username":"trumpjerry","password":"belize1289"}'
+
+{
+        "authentication_token": {
+                "token": "KY3ODS5OMK7ZV5HT4HJ666EN3Y",
+                "expiry": "2022-11-13T20:13:34.114615005-06:00"
+        }
+}
+
+activated
+
+curl -X PUT -d '{"token": "VQAEAPEOII7RZD2YWBV75WJCJI"}' localhost:4000/v1/users/activated
 
 start vid 92
 
