@@ -100,6 +100,7 @@ func ValidatePasswordPlaintext(v *validator.Validator, password string) {
 	v.Check(len(password) <= 72, "password", "must not be more than 72 Characters")
 }
 
+// Validate for user struct
 func ValidateUser(v *validator.Validator, user *User) {
 	v.Check(user.Username != "", "username", "must be provided")
 	v.Check(len(user.Username) <= 200, "username", "must not be more than 200 bye Characters")
@@ -115,6 +116,41 @@ func ValidateUser(v *validator.Validator, user *User) {
 
 	v.Check(user.DistrictId != 0, "district_id", "must be provided")
 	v.Check(user.UserTypeId != 0, "user_type_id", "must be provided")
+
+	//validate Email
+
+	ValidateEmail(v, user.Email)
+
+	//validate Password
+	if user.Password.plaintext != nil {
+
+		ValidatePasswordPlaintext(v, *user.Password.plaintext)
+	}
+
+	//Ensure a hash of the password was created
+
+	if user.Password.hash == nil {
+		panic("Missing password hash for the user")
+	}
+
+}
+
+// Validate the userlisting struct
+func ValidateUserListing(v *validator.Validator, user *UserListing) {
+	v.Check(user.Username != "", "username", "must be provided")
+	v.Check(len(user.Username) <= 200, "username", "must not be more than 200 bye Characters")
+
+	v.Check(user.Fullname != "", "fullname", "must be provided")
+	v.Check(len(user.Fullname) <= 500, "fullname", "must not be more than 500 bye Characters")
+
+	v.Check(user.Phone != "", "phone", "must be provided")
+	v.Check(validator.Matches(user.Phone, validator.PhoneRX), "phone", "must be a valid phone number")
+
+	v.Check(user.Address != "", "address", "must be provided")
+	v.Check(len(user.Address) <= 500, "address", "must not be more than 500 bytes long")
+
+	v.Check(user.DistrictId != "", "district_id", "must be provided")
+	v.Check(user.UserTypeId != "", "user_type_id", "must be provided")
 
 	//validate Email
 
@@ -213,6 +249,41 @@ func (m UserModel) Update(user *User) error {
 	return nil
 }
 
+// Update userListing - its different since every entries is string type so additional internal need to place for a successful update
+// The client can update their information
+func (m UserModel) UpdateUser(user *UserListing) error {
+	query := `
+		UPDATE users
+		SET username = $1, fullname = $2, email = $3, phone = $4,
+		 address = $5, districtid = (select id from district where name = $6), usertypeid = (select id from usertype where name = $7) , activated = $8
+		WHERE id = $9
+		RETURNING id
+	`
+	args := []interface{}{
+		user.Username,
+		user.Fullname,
+		user.Email,
+		user.Phone,
+		user.Address,
+		user.DistrictId,
+		user.UserTypeId,
+		user.Activated,
+		user.ID,
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID)
+	if err != nil {
+		switch {
+		case err.Error() == `pq :duplicate key values violates unique constraint "users_email_key"`:
+			return ErrDuplicateEmail
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
 func (m UserModel) GetForToken(tokenScope, tokenPlainText string) (*User, error) {
 
 	tokenHash := sha256.Sum256([]byte(tokenPlainText))

@@ -105,6 +105,115 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+// Update User
+func (app *application) updateUserHandler(w http.ResponseWriter, r *http.Request) {
+
+	//get id from user
+	id, err := app.readIdParam(r)
+
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	//fetch the orignal record from the database
+	user, err := app.models.Users.Get(id)
+
+	if err != nil {
+
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+
+		return
+	}
+
+	//Create an input Struct to hold data read in from client
+
+	var input struct {
+		Username   *string `json:"username"`
+		Fullname   *string `json:"fullname"`
+		Email      *string `json:"email"`
+		Phone      *string `json:"phone"`
+		Address    *string `json:"address"`
+		DistrictId *string `json:"district_id"`
+		UserTypeId *string `json:"user_type_id"`
+		Activated  bool    `json:"activated"`
+	}
+	//intialize new json.decoder instance
+
+	err = app.readJSON(w, r, &input)
+
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// //Check the update
+	if input.Username != nil {
+
+		user.Username = *input.Username
+	}
+	if input.Fullname != nil {
+
+		user.Fullname = *input.Fullname
+	}
+
+	if input.Email != nil {
+
+		user.Email = *input.Email
+	}
+
+	if input.Phone != nil {
+
+		user.Phone = *input.Phone
+	}
+
+	if input.Address != nil {
+
+		user.Address = *input.Address
+	}
+
+	if input.DistrictId != nil {
+		user.DistrictId = *input.DistrictId
+	}
+
+	if input.UserTypeId != nil {
+		user.UserTypeId = *input.UserTypeId
+	}
+
+	//Initalize a new Validator
+	v := validator.New()
+
+	//check the map to determine if there were any validation errors
+
+	if data.ValidateUserListing(v, user); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+
+	}
+
+	err = app.models.Users.UpdateUser(user)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+
+		return
+	}
+
+	//wreite data return by the update
+	err = app.writeJSON(w, http.StatusOK, envelope{"users": user}, nil)
+
+}
+
 func (app *application) activatedUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	//parse the plaintext activation token

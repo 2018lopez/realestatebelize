@@ -22,6 +22,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/users/image", app.uploadUserImageHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/listings", app.requireActivatedUser(app.createListingHandler))
+	router.HandlerFunc(http.MethodPut, "/v1/users/updated/:id", app.updateUserHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/listings/:id", app.requireActivatedUser(app.showListingHandler))
 
 	return app.recoverPanic(app.rateLimit(app.authenticate(router)))

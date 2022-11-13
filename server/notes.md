@@ -4,7 +4,7 @@ Tasks
 2. Design UI - Figma
 3. Implement Database
 4. Setup trello Agile
-   BODY='{"username":"trumpjerry","password":"belize1289","fullname":"Jerry Trump", "email":"trumpjerry@example.com", "phone":"501-607-2461", "address":"Military St San Ignacio","district_id":1, "user_type_id":1}'
+   BODY='{"username":"trumpjerry","password":"belize1289","fullname":"Jerry Trumps", "email":"trumpjerry@example.com", "phone":"501-607-2462", "address":"Military St San Ignacio","district_id":"Cayo", "user_type_id":"agent"}'
 
 authentication
 
