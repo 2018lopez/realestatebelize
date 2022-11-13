@@ -16,7 +16,7 @@ func (app *application) logError(r *http.Request, err error) {
 
 //Send JSON Format error message
 
-func (app *application) errorRepsonse(w http.ResponseWriter, r *http.Request, status int, message interface{}) {
+func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, status int, message interface{}) {
 	//create json response
 	env := envelope{"error": message}
 	err := app.writeJSON(w, status, env, nil)
@@ -35,7 +35,7 @@ func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Reque
 
 	//Prepare msg with the error
 	message := "the server encountered a problem and couldn't process the request"
-	app.errorRepsonse(w, r, http.StatusInternalServerError, message)
+	app.errorResponse(w, r, http.StatusInternalServerError, message)
 }
 
 // The not found response
@@ -43,7 +43,7 @@ func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Reque
 func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request) {
 	//create msg
 	message := "Request resource couldn't be found"
-	app.errorRepsonse(w, r, http.StatusNotFound, message)
+	app.errorResponse(w, r, http.StatusNotFound, message)
 }
 
 // a method not allowed response
@@ -51,20 +51,20 @@ func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request)
 func (app *application) methodNotAllowedResponse(w http.ResponseWriter, r *http.Request) {
 	//create msg
 	message := fmt.Sprintf("the %s method is not supported for this resources", r.Method)
-	app.errorRepsonse(w, r, http.StatusMethodNotAllowed, message)
+	app.errorResponse(w, r, http.StatusMethodNotAllowed, message)
 }
 
 // bad request
 func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
 
-	app.errorRepsonse(w, r, http.StatusBadRequest, err.Error())
+	app.errorResponse(w, r, http.StatusBadRequest, err.Error())
 
 }
 
 //Validation errors
 
 func (app *application) failedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
-	app.errorRepsonse(w, r, http.StatusUnprocessableEntity, errors)
+	app.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
 }
 
 //edit error
@@ -72,18 +72,38 @@ func (app *application) failedValidationResponse(w http.ResponseWriter, r *http.
 func (app *application) editConflictResponse(w http.ResponseWriter, r *http.Request) {
 	//create msg
 	message := "unable to update the record due to an edit conflict, please try again"
-	app.errorRepsonse(w, r, http.StatusConflict, message)
+	app.errorResponse(w, r, http.StatusConflict, message)
 }
 
 // Rate Limit Errors
 func (app *application) rateLimitExceedeResponse(w http.ResponseWriter, r *http.Request) {
 	//create msg
 	message := "rate limit exceeded"
-	app.errorRepsonse(w, r, http.StatusTooManyRequests, message)
+	app.errorResponse(w, r, http.StatusTooManyRequests, message)
 }
 
 // Invalid credentials
 func (app *application) invalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
 	message := "invalid authentication credentials"
-	app.errorRepsonse(w, r, http.StatusUnauthorized, message)
+	app.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
+// Invalid Token
+func (app *application) invalidAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("WWW-Authenticate", "Bearer")
+
+	message := "invalid or missing authentication token"
+	app.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
+// Unauthorized access
+func (app *application) authenticationRequiredResponse(w http.ResponseWriter, r *http.Request) {
+	message := "you must be authenticated to access this resource"
+	app.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
+// Users who have not activated their account
+func (app *application) inactiveAccountResponse(w http.ResponseWriter, r *http.Request) {
+	message := "your user account must be activated to access this resource"
+	app.errorResponse(w, r, http.StatusForbidden, message)
 }

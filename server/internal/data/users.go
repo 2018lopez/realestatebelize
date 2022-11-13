@@ -14,6 +14,7 @@ import (
 
 var (
 	ErrDuplicateEmail = errors.New("Duplicate email")
+	AnonymousUser     = &User{}
 )
 
 type User struct {
@@ -52,6 +53,11 @@ type UserListing struct {
 type password struct {
 	plaintext *string
 	hash      []byte
+}
+
+// check if a user is anonymous
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
 }
 
 // The set method to stores the hash of plaintext password
