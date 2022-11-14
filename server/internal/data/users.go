@@ -49,6 +49,12 @@ type UserListing struct {
 	CreatedAt    time.Time `json:"created_at"`
 }
 
+// User Struct for password reset
+type UserResetPassword struct {
+	Username string   `json:"username"`
+	Password password `json:"-"`
+}
+
 // create a customer password type
 type password struct {
 	plaintext *string
@@ -170,6 +176,25 @@ func ValidateUserListing(v *validator.Validator, user *UserListing) {
 
 }
 
+// Validate the userlisting struct
+func ValidateUserReset(v *validator.Validator, user *UserResetPassword) {
+	v.Check(user.Username != "", "username", "must be provided")
+	v.Check(len(user.Username) <= 200, "username", "must not be more than 200 bye Characters")
+
+	//validate Password
+	if user.Password.plaintext != nil {
+
+		ValidatePasswordPlaintext(v, *user.Password.plaintext)
+	}
+
+	//Ensure a hash of the password was created
+
+	if user.Password.hash == nil {
+		panic("Missing password hash for the user")
+	}
+
+}
+
 // create  user model
 type UserModel struct {
 	DB *sql.DB
@@ -273,6 +298,34 @@ func (m UserModel) UpdateUser(user *UserListing) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID)
+	if err != nil {
+		switch {
+		case err.Error() == `pq :duplicate key values violates unique constraint "users_email_key"`:
+			return ErrDuplicateEmail
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+// User - Reset password
+func (m UserModel) ResetPassword(user *UserResetPassword) error {
+	query := `
+		UPDATE users
+		SET password_hash = $1
+		WHERE username = $2
+		RETURNING username
+	`
+	args := []interface{}{
+
+		user.Password.hash,
+		user.Username,
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.Username)
 	if err != nil {
 		switch {
 		case err.Error() == `pq :duplicate key values violates unique constraint "users_email_key"`:

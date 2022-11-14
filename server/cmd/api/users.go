@@ -214,6 +214,59 @@ func (app *application) updateUserHandler(w http.ResponseWriter, r *http.Request
 
 }
 
+// reset password
+func (app *application) resetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	//Hold data from the request body
+
+	var input struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	//Parse the request body into the anonymous struct
+	err := app.readJSON(w, r, &input)
+
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	user := &data.UserResetPassword{
+		Username: input.Username,
+	}
+
+	//Generate a password Hash
+	err = user.Password.Set(input.Password)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	//Perform Validation
+	v := validator.New()
+
+	if data.ValidateUserReset(v, user); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	//insert data to database
+
+	err = app.models.Users.ResetPassword(user)
+	if err != nil {
+
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	//Write a 202 Accepted Status
+	err = app.writeJSON(w, http.StatusAccepted, envelope{"user": user}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
 func (app *application) activatedUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	//parse the plaintext activation token

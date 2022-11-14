@@ -60,6 +60,29 @@ func ValidateListing(v *validator.Validator, listing *Listing) {
 
 }
 
+func ValidateListings(v *validator.Validator, listing *Listings) {
+
+	//use the check method to execute our validation
+	v.Check(listing.PropertyTitle != "", "property_title", "must be provided")
+	v.Check(len(listing.PropertyTitle) >= 20, "propertyt_itle", "must be more than 20 byte long")
+
+	v.Check(listing.PropertyStatusId != "", "property_status_id", "must be provided")
+	v.Check(listing.PropertyTypeId != "", "property_type_id", "must be provided")
+
+	v.Check(listing.Price >= 0, "price", "must be provided")
+
+	v.Check(listing.Description != "", "description", "must be provided")
+	v.Check(len(listing.Description) >= 20, "description", "must be more than 20 byte long")
+
+	v.Check(listing.Address != "", "address", "must be provided")
+	v.Check(len(listing.Address) >= 10, "address", "must be more than 10 byte long")
+
+	v.Check(listing.DistrictId != "", "district_id", "must be provided")
+
+	v.Check(listing.GoogleMapUrl != "", "google_map_url", "must be provided")
+
+}
+
 // Define a ListingModel which wrap a sql.DB connection pool
 type ListingModel struct {
 	DB *sql.DB
@@ -90,6 +113,37 @@ func (m ListingModel) Insert(listing *Listing) error {
 	}
 
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&listing.ID, &listing.CreatedAt)
+
+}
+
+// Update Listing
+func (m ListingModel) Update(listing *Listings) error {
+
+	query := `
+	UPDATE listing
+	set propertytitle = $1, propertystatusid = (select id from propertystatus where name = $2), propertytypeid = (select id from propertytype where name = $3)
+	,price = $4, description = $5, address = $6, districtid = (select id from district where name = $7), googlemapurl = $8
+	where id = $9
+		RETURNING id
+	`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	//cleanup to prevent memory leak
+	defer cancel()
+	//Collect the data fields into a slice
+	args := []interface{}{
+		listing.PropertyTitle,
+		listing.PropertyStatusId,
+		listing.PropertyTypeId,
+		listing.Price,
+		listing.Description,
+		listing.Address,
+		listing.DistrictId,
+		listing.GoogleMapUrl,
+		listing.ID,
+	}
+
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&listing.ID)
 
 }
 

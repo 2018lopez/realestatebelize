@@ -1,31 +1,51 @@
 Tasks
 
-1. Design Database
-2. Design UI - Figma
-3. Implement Database
-4. Setup trello Agile
-   BODY='{"username":"trumpjerry","password":"belize1289","fullname":"Jerry Trumps", "email":"trumpjerry@example.com", "phone":"501-607-2462", "address":"Military St San Ignacio","district_id":"Cayo", "user_type_id":"agent"}'
+User
 
-authentication
+POST:
 
-BODY='{"username":"trumpjerry","password":"belize1289"}'
+   User Creation
 
-{
-        "authentication_token": {
-                "token": "KY3ODS5OMK7ZV5HT4HJ666EN3Y",
-                "expiry": "2022-11-13T20:13:34.114615005-06:00"
-        }
-}
+   curl -i -d "$BODY" localhost:4000/v1/users
 
-activated
+   BODY='{"username":"lopezvictor","password":"belize12345","fullname":"Victor Lopez", "email":"lopezvic@example.com", "phone":"501-607-2462", "address":"George St San Ignacio","district_id":1, "user_type_id":1}'
 
-curl -X PUT -d '{"token": "VQAEAPEOII7RZD2YWBV75WJCJI"}' localhost:4000/v1/users/activated
+   Upload user profile image
 
-start vid 92
+PUT:
 
-last error
-"error": "body contains unknown key json: unknown field \"username\""
+    BODY='{"username":"lopezvictor","fullname":"Victor Lopez", "email":"lopezvic@example.com", "phone":"501-607-2462", "address":"George St San Ignacio","district_id":"Cayo", "user_type_id":"agent"}'
 
-   BODY='{"username":"trumpe","password":"belize12s$","fullname":"Elsa Trump", "email":"trumpelsa@example.com", "phone":"501-607-2461", "address":"Military St San Ignacio","district_id":1, "user_type_id":1}'
-   
-   the problem is on readjson is not read file type value
+    curl -i -X PUT -d "$BODY" localhost:4000/v1/users/updated/:id
+
+Activation
+
+curl -X PUT -d '{"token": "OBIZFGIAZO6QWJXAAY5YKJPMNY"}' localhost:4000/v1/users/activated
+
+Authentication 
+
+BODY='{"username":"lopezvictor","password":"belize12345"}'
+
+
+curl -i -X POST -d "$BODY" localhost:4000/v1/tokens/authentication
+
+
+Listing
+
+Create Listing
+
+GET listing by id
+
+
+
+POST
+
+      BODY='{"property_title": "Land for Sale in the Area of San Ignacio ", "property_status_id":1, "property_type_id":1,"price":70000, "description":"Land Size is 200 ft by 200 ft", "address":"27 Street, San Ignacio Town", "district_id": 1, "google_map_url": "google.com/3wdfdyf9"}'
+
+      curl -i -d "$BODY" localhost:4000/v1/listings
+
+PUT
+
+BODY='{"property_title": "Land for Sale in San Ignacio Town", "property_status_id":"Available", "property_type_id":"Land","price":80000, "description":"Land Size is 100 ft by 200 ft", "address":"27 Street, San Ignacio Town", "district_id": "Cayo", "google_map_url": "google.com/3wdfdsf9"}'
+
+      curl -X PUT -d "$BODY" localhost:4000/v1/listings/update/id
