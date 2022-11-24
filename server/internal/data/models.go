@@ -18,6 +18,7 @@ type Models struct {
 	Users            UserModel
 	UserProfileImage UserProfileImgModel
 	Listing          ListingModel
+	Permissions      PermissionsModel
 }
 
 // NewModels allow us to create a new models
@@ -28,5 +29,6 @@ func NewModels(db *sql.DB) Models {
 		Users:            UserModel{DB: db},
 		UserProfileImage: UserProfileImgModel{DB: db},
 		Listing:          ListingModel{DB: db},
+		Permissions:      PermissionsModel{DB: db},
 	}
 }

@@ -27,7 +27,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/listings", app.createListingHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/listings/:id", app.showListingHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/listings/update/:id", app.updateListingHandler)
-
+	router.HandlerFunc(http.MethodGet, "/v1/currencyrate/:id", app.currencyRate)
 	return app.recoverPanic(app.rateLimit(app.authenticate(router)))
 
 }
