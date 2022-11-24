@@ -30,6 +30,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/currencyrate/:id", app.currencyRate)
 	router.HandlerFunc(http.MethodPost, "/v1/users/listings", app.addUserListingHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/agent/listings/:id", app.getListingByAgentdHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/listings/images", app.uploadListingImageHandler)
 	return app.recoverPanic(app.rateLimit(app.authenticate(router)))
 
 }

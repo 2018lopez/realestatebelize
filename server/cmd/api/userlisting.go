@@ -83,7 +83,7 @@ func (app *application) getListingByAgentdHandler(w http.ResponseWriter, r *http
 	}
 
 	//write data return by get
-	err = app.writeJSON(w, http.StatusOK, envelope{"user": users}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"Listing_User": users}, nil)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

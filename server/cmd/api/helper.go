@@ -229,3 +229,47 @@ func (app *application) uploadFiles(r *http.Request) (string, error) {
 	return filePath, nil
 
 }
+
+// upload multiple images for listing
+func (app *application) uploadImages(r *http.Request) ([]string, error) {
+	err := r.ParseMultipartForm(200000) // grab the multipart form
+	if err != nil {
+
+		return nil, err
+	}
+
+	formdata := r.MultipartForm // ok, no problem so far, read the Form data
+
+	//get the *fileheaders
+	files := formdata.File["multiplefiles"] // grab the filenames
+	var filePaths []string
+	for i := range files { // loop through the files one by one
+		file, err := files[i].Open()
+		defer file.Close()
+		if err != nil {
+
+			return nil, err
+		}
+		filePath := "uploads/" + files[i].Filename
+		out, err := os.Create(filePath)
+
+		defer out.Close()
+		if err != nil {
+
+			return nil, err
+		}
+
+		_, err = io.Copy(out, file) // file not files[i] !
+
+		if err != nil {
+
+			return nil, err
+		}
+
+		filePaths = append(filePaths, "uploads/"+files[i].Filename)
+
+	}
+
+	return filePaths, nil
+
+}

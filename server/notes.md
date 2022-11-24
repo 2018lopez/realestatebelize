@@ -49,8 +49,8 @@ BODY='{"property_title": "Land for Sale in San Ignacio Town", "property_status_i
 //Task to Complete
 
 add user agent to listing/get - done
-add listing image
-update property status - leased, sold
+add listing image - done
+update property status - leased, sold - 
 views for top agents
 views for report
 func(w http.ResponseWriter, r *http.Request)
