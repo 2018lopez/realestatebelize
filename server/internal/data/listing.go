@@ -34,6 +34,9 @@ type Listings struct {
 	Address          string    `json:"address"`
 	DistrictId       string    `json:"district_id"`
 	GoogleMapUrl     string    `json:"google_map_url"`
+	Agent            string    `json:"agent"`
+	AgentPhone       string    `json:"agent_phone"`
+	AgentEmail       string    `json:"agent_email"`
 	CreatedAt        time.Time `json:"-"`
 }
 
@@ -158,9 +161,11 @@ func (m ListingModel) Get(id int64) (*Listings, error) {
 	//create query
 	query := `
 
-	SELECT l.id , l.propertytitle as title, ps.name as propertystatus, pt.name as propertytype, l.price, l.description, l.address, d.name as district, l.googlemapurl, l.created_at  from listing l inner join propertystatus ps on l.propertystatusid=ps.id
+	SELECT l.id , l.propertytitle as title, ps.name as propertystatus, pt.name as propertytype, l.price, l.description, l.address, d.name as district, l.googlemapurl, u.fullname, u.phone, u.email, l.created_at  from listing l inner join propertystatus ps on l.propertystatusid=ps.id
 	inner join propertytype pt on l.propertytypeid = pt.id
 	inner join district d on l.districtid = d.id
+	inner join userproperties up on up.listingid = l.id
+	inner join users u on u.id = up.userid
 	WHERE l.id = $1
 	
 	`
@@ -186,6 +191,9 @@ func (m ListingModel) Get(id int64) (*Listings, error) {
 		&listing.Address,
 		&listing.DistrictId,
 		&listing.GoogleMapUrl,
+		&listing.Agent,
+		&listing.AgentPhone,
+		&listing.AgentEmail,
 		&listing.CreatedAt,
 	)
 
