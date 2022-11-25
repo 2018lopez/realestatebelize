@@ -19,7 +19,7 @@ type UserListings struct {
 
 type ListingByUser struct {
 	Fullname      string   `json:"fullname"`
-	PropertyTitle []string `json:"property_title`
+	PropertyTitle []string `json:"property_title"`
 	ListingId     []string `json:"listing_id"`
 	Total         int64    `json:"total"`
 }

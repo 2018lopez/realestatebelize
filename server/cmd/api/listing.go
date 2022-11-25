@@ -83,15 +83,17 @@ func (app *application) showListingHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	//fetch the specific schools
+	//fetch the specific Listing
 
 	listing, err := app.models.Listing.Get(id)
 	//handle errors
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
+			fmt.Println("fsd", err)
 			app.notFoundResponse(w, r)
 		default:
+
 			app.serverErrorResponse(w, r, err)
 		}
 

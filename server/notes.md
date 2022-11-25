@@ -50,13 +50,18 @@ BODY='{"property_title": "Land for Sale in San Ignacio Town", "property_status_i
 
 add user agent to listing/get - done
 add listing image - done
-update property status - leased, sold - 
-views for top agents
-views for report
+update property status - leased, sold - done
+views for top agents - done
+views for report - done
 func(w http.ResponseWriter, r *http.Request)
 
 //ADD USER PROPERTIES
 
-BODY='{"username": "lopezvictor", "listing_id": 2}'
+BODY='{"username": "trumpvictor", "listing_id": 3}'
 
 curl -i -d "$BODY" localhost:4000/v1/users/listings
+
+
+//Update property status -
+BODY='{ "property_status_id":"Sold"}'
+curl -X PUT -d "$BODY" localhost:4000/v1/listings/update/3
