@@ -1,8 +1,8 @@
-Tasks
+Last Vid Watch - 107
 
 User
 
-POST:
+
 
 User Creation
 
@@ -26,7 +26,7 @@ Authentication
 
 BODY='{"username":"lopezvictor","password":"belize12345"}'
 
-curl -i -X POST -d "\$BODY" localhost:4000/v1/tokens/authentication
+curl -i -X POST -d "$BODY" localhost:4000/v1/tokens/authentication
 
 Listing
 
@@ -65,3 +65,28 @@ curl -i -d "$BODY" localhost:4000/v1/users/listings
 //Update property status -
 BODY='{ "property_status_id":"Sold"}'
 curl -X PUT -d "$BODY" localhost:4000/v1/listings/update/3
+
+
+//Give all the users read permission
+INSERT INOT users_permissions
+SELECT id, (SELECT id FROM permissions WHERE code ='listings:read') FROM users;
+
+//Give user lopezvictor write permission
+
+INSERT INTO users_permissions(user_id, permission_id)
+VALUES(SELECT id FROM users WHERE username = 'lopezvictor'),(SELECT id FROM permissions WHERE code ='listings:write')
+
+//list the activated users and their permissions
+
+SELECT username, array_agg(permissions.code) FROM permissions INNER JOIN users_permissions 
+ON users_permissions.permission_id = permissions.id
+INNER JOIN users
+ON users_permissions.user_id = users.id
+WHERE users.activated = true
+group by username
+
+
+----
+lopezvictor - WQJHSQYKTFDBYJOSJQSD4E44HA
+
+curl -H "Authorization: Bearer WQJHSQYKTFDBYJOSJQSD4E44HA" localhost:4000/v1/listings/3

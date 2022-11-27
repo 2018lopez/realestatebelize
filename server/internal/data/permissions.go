@@ -6,6 +6,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 //Define the slice to hold the permission codes
@@ -32,7 +34,7 @@ func (m PermissionsModel) GetAllForUser(userID int64) (Permissions, error) {
 		permissions p 
 		INNER JOIN
 		users_permissions up
-		ON up.id = p.id
+		ON up.permission_id = p.id
 		INNER JOIN users u
 		ON up.user_id = u.id
 		WHERE u.id = $1
@@ -64,4 +66,20 @@ func (m PermissionsModel) GetAllForUser(userID int64) (Permissions, error) {
 	}
 
 	return permissions, nil
+}
+
+// Function to add user permissions
+func (m PermissionsModel) AddForUser(userID int64, codes ...string) error {
+	query := `
+
+		INSERT INTO users_permissions
+		SELECT $1, permissions.id FROM permissions WHERE permissions.code = ANY($2)
+		
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := m.DB.ExecContext(ctx, query, userID, pq.Array(codes))
+
+	return err
 }

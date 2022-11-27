@@ -15,7 +15,7 @@ func (app *application) routes() http.Handler {
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 	router.ServeFiles("/uploads/*filepath", http.Dir("uploads"))
 
-	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.requireActivatedUser(app.healthcheckHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/users/:id", app.getUserByIdHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", app.activatedUserHandler)
@@ -25,7 +25,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPut, "/v1/users/updated/:id", app.updateUserHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/users/resetpassword", app.resetPasswordHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/listings", app.createListingHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/listings/:id", app.showListingHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/listings/:id", app.requirePermission("listings:read", app.showListingHandler))
 	router.HandlerFunc(http.MethodPut, "/v1/listings/update/:id", app.updateListingHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/currencyrate/:id", app.currencyRate)
 	router.HandlerFunc(http.MethodPost, "/v1/users/listings", app.addUserListingHandler)
