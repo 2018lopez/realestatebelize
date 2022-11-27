@@ -110,7 +110,7 @@ func (app *application) showListingHandler(w http.ResponseWriter, r *http.Reques
 
 }
 
-// Show listings for get by id
+// Update listings for get by id
 
 func (app *application) updateListingHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -222,6 +222,60 @@ func (app *application) updateListingHandler(w http.ResponseWriter, r *http.Requ
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
+	}
+
+}
+
+// Show all listings
+func (app *application) showAllListingHandler(w http.ResponseWriter, r *http.Request) {
+
+	var input struct {
+		PropertyTitle string
+		DistrictId    string
+		data.Filters
+	}
+
+	//Initialize a validator
+	v := validator.New()
+
+	//get the url values map
+	qs := r.URL.Query()
+
+	//use the helper method to extract the values
+	input.PropertyTitle = app.readString(qs, "property_title", "")
+	input.DistrictId = app.readString(qs, "district_id", "")
+
+	//get the page info
+	input.Filters.Page = app.readInt(qs, "page", 1, v)
+	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
+
+	//sort info
+	input.Filters.Sort = app.readString(qs, "sort", "id")
+
+	//specific the allowed sortValues
+	input.Filters.SortList = []string{"id", "property_title", "district_id", "-id", "-property_title", "-district_id"}
+
+	//check for validation errors
+
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	//get a listing of all properties
+	listings, metadata, err := app.models.Listing.ShowListings(input.PropertyTitle, input.DistrictId, input.Filters)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	//send a json response
+	err = app.writeJSON(w, http.StatusOK, envelope{"listings": listings, "metadata": metadata}, nil)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
 	}
 
 }

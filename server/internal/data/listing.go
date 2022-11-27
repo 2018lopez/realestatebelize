@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/lib/pq"
@@ -213,4 +214,87 @@ func (m ListingModel) Get(id int64) (*Listings, error) {
 
 	//Success
 	return &listing, nil
+}
+
+// Display all listings
+func (m ListingModel) ShowListings(propertytitle string, district string, filters Filters) ([]*Listings, Metadata, error) {
+
+	//create query
+	query := fmt.Sprintf(`
+
+	SELECT COUNT(*) OVER(), l.id , l.propertytitle as title, ps.name as propertystatus, pt.name as propertytype, l.price, l.description, l.address, d.name as district, l.googlemapurl, i.imageurl,u.fullname, u.phone, u.email, l.created_at  from listing l inner join propertystatus ps on l.propertystatusid=ps.id
+	inner join propertytype pt on l.propertytypeid = pt.id
+	inner join district d on l.districtid = d.id
+	inner join userproperties up on up.listingid = l.id
+	inner join users u on u.id = up.userid
+	inner join images i on i.listingid = l.id
+	where (to_tsvector('simple', l.propertytitle) @@ plainto_tsquery('simple', $1) OR $1 = '')
+	AND (to_tsvector('simple', d.name) @@ plainto_tsquery('simple', $2) OR $2 = '')
+	ORDER BY %s %s, l.id ASC
+	LIMIT $3 OFFSET $4`, filters.sortColumn(), filters.sortOrder())
+
+	//create a context
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	//cleanup to prevent memory leak
+	defer cancel()
+
+	args := []interface{}{propertytitle, district, filters.limit(), filters.offset()}
+	//execute
+	rows, err := m.DB.QueryContext(ctx, query, args...)
+
+	if err != nil {
+		return nil, Metadata{}, err
+	}
+
+	//close the result set
+	defer rows.Close()
+
+	totalRecords := 0
+
+	//Initialize an empty slice to hold listings data
+	listings := []*Listings{}
+
+	//iterate over the rows in the result set
+
+	for rows.Next() {
+		var listing Listings
+		//scan the values from row into school struct
+		err := rows.Scan(
+			&totalRecords,
+			&listing.ID,
+			&listing.PropertyTitle,
+			&listing.PropertyStatusId,
+			&listing.PropertyTypeId,
+			&listing.Price,
+			&listing.Description,
+			&listing.Address,
+			&listing.DistrictId,
+			&listing.GoogleMapUrl,
+			pq.Array(&listing.Images),
+			&listing.Agent,
+			&listing.AgentPhone,
+			&listing.AgentEmail,
+			&listing.CreatedAt,
+		)
+
+		if err != nil {
+			return nil, Metadata{}, err
+		}
+
+		//add the listings to our slice
+		listings = append(listings, &listing)
+
+	}
+
+	//Check for errors after looping through the result set
+
+	if err = rows.Err(); err != nil {
+		return nil, Metadata{}, err
+	}
+
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+	// return slice of listings
+	return listings, metadata, nil
+
 }

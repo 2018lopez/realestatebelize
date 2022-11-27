@@ -25,6 +25,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPut, "/v1/users/updated/:id", app.updateUserHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/users/resetpassword", app.resetPasswordHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/listings", app.createListingHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/listings", app.showAllListingHandler)
+
 	router.HandlerFunc(http.MethodGet, "/v1/listings/:id", app.requirePermission("listings:read", app.showListingHandler))
 	router.HandlerFunc(http.MethodPut, "/v1/listings/update/:id", app.updateListingHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/currencyrate/:id", app.currencyRate)
