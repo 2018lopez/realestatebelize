@@ -133,6 +133,11 @@ Reports Endpoints
 ```bash
  GET: /v1/report/listings
 ```
+```bash
+ GET: /v1/report/total-sales
+```
+
+
 
 <!-- CURRENCY RATE -->
 ### :gear: Currency Rate Endpoint

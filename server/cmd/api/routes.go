@@ -34,6 +34,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/agent/listings/:id", app.getListingByAgentdHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/report/agents", app.getTopAgentsHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/report/listings", app.getListingStatusHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/report/total-sales", app.getTotalSalesHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/listings/images", app.uploadListingImageHandler)
 	return app.recoverPanic(app.rateLimit(app.authenticate(router)))
 

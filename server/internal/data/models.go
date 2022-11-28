@@ -23,6 +23,7 @@ type Models struct {
 	ListingImages    ListingImgModel
 	TopAgents        ReportModel
 	ListingsStatus   ReportModel
+	TotalSales       ReportModel
 }
 
 // NewModels allow us to create a new models
@@ -38,5 +39,6 @@ func NewModels(db *sql.DB) Models {
 		ListingImages:    ListingImgModel{DB: db},
 		TopAgents:        ReportModel{DB: db},
 		ListingsStatus:   ReportModel{DB: db},
+		TotalSales:       ReportModel{DB: db},
 	}
 }

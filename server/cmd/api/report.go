@@ -46,3 +46,24 @@ func (app *application) getListingStatusHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 }
+
+//getTotalSalesHandler allow client to see a TotalSales of properties sold/leased
+
+func (app *application) getTotalSalesHandler(w http.ResponseWriter, r *http.Request) {
+
+	//get a listing of the properties
+	sales, err := app.models.TotalSales.GetTotalSales()
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	//send a json response
+	err = app.writeJSON(w, http.StatusOK, envelope{"sales": sales}, nil)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+}
