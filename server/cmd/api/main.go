@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"flag"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -40,6 +41,9 @@ type config struct {
 		username string //from mailTrap
 		password string
 		sender   string
+	}
+	cors struct {
+		trustedOrigins []string
 	}
 }
 
@@ -75,6 +79,12 @@ func main() {
 	flag.StringVar(&cfg.smtp.password, "smtp-password", "8c073ce7c82892", "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Belize RealEstate <no-reply@belizerealestate.imerlopez.net>", "SMTP Sender")
 
+	//use the flag.Func() function to parse our trusted origins flag from
+	//a string to a slice of string
+	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
+		cfg.cors.trustedOrigins = strings.Fields(val)
+		return nil
+	})
 	flag.Parse()
 
 	//logger

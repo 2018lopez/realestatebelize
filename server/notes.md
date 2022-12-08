@@ -90,3 +90,30 @@ group by username
 lopezvictor - WQJHSQYKTFDBYJOSJQSD4E44HA
 
 curl -H "Authorization: Bearer WQJHSQYKTFDBYJOSJQSD4E44HA" localhost:4000/v1/listings/3
+
+-------------------
+Test 2
+
+Authentication
+
+BODY='{"username":"lopezvictor","password":"belize12345"}'
+
+curl -i -X POST -d "$BODY" localhost:4000/v1/tokens/authentication
+
+
+curl -H "Authorization: Bearer HL4SBFFE22EOIWEXRFMSPFQHTA " localhost:4000/v1/listings/3
+
+
+
+//Create Listing
+BODY='{"property_title": "Apartment for Sale in the Area of Santa Elena ", "property_status_id":1, "property_type_id":1,"price":150000, "description":"Apartment Size is 200 ft by 200 ft", "address":"27 Street, Santa Elena Town", "district_id": 1, "google_map_url": "google.com/3wdfdyf9"}'
+
+      curl -i -d "$BODY" -H  "Authorization: Bearer HL4SBFFE22EOIWEXRFMSPFQHTA" localhost:4000/v1/listings
+
+
+
+//ADD USER PROPERTIES
+
+BODY='{"username": "lopezvictor", "listing_id": 4}'
+
+curl -i -d "$BODY" localhost:4000/v1/users/listings
